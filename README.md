@@ -13,7 +13,7 @@ ChatGPT Automation is a Python project that aims to automate interactions with O
 
 ## Prerequisites
 
-1. Install the library: pip install git+https://github.com/Michelangelo27/chatgpt_selenium_automation.git
+1. Install the library: pip install [git+https://github.com/Michelangelo27/chatgpt_selenium_automation.git](https://github.com/sungreong/chatgpt_selenium_automation.git)
 2. Download the appropriate version of `chromedriver.exe` and save it to a known location on your system.
 3. chrome이 켜져있는 상태에서 하면 잘 안되는 이슈가 있어서 크롬창을 모두 끄고 해야 작동함.
 4. 초기에 화면이 정상적으로 뜨고 나서 작업을 진행해야 하기 때문에 일부 대기 시간이 필요함.
