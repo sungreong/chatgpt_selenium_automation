@@ -28,4 +28,3 @@ chatgpt.save_conversation(file_name)
 # Close the browser and terminate the WebDriver session
 if input("Do you want to close the browser? (y/n): ").lower() == "y":
     chatgpt.quit()
-    sys.exit(0)
