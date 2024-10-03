@@ -1,0 +1,45 @@
+## make test curl
+
+import os
+import json
+import requests
+
+# 샘플 데이터 로드
+with open("./doc_parsing/page_all_openparse.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+# 첫 번째 페이지 데이터 사용
+node_data_dict = data["pageBoxList"]
+
+for page_number, page_node_data in node_data_dict.items():
+
+    if len(page_node_data) == 0:
+        print(f"페이지 {page_number}에 데이터가 없습니다. 다음 페이지를 시도합니다.")
+        continue
+
+    # BoxInfo 데이터 준비
+    box_infos = [
+        {"id": idx, "x": boxinfo["x"], "y": boxinfo["y"], "bbox": boxinfo["bbox"], "text": boxinfo["text"]}
+        for idx, boxinfo in enumerate(page_node_data)
+    ]
+    image_path = f"./doc_parsing/image{page_number}.png"
+    if not os.path.exists(image_path):
+        print(f"이미지 파일이 없습니다: {image_path}")
+        continue
+
+    # API 요청 데이터 준비
+    with open(image_path, "rb") as image_file:
+        files = {
+            "image": ("image.png", image_file, "image/png"),
+            "page_data": (None, json.dumps({"page_number": page_number, "box_infos": box_infos})),
+        }
+
+        # API 요청 보내기
+        response = requests.post("http://localhost:8001/process_document", files=files)
+
+    # 응답 확인
+    # assert response.status_code == 200
+    assert "response" in response.json()
+    print("테스트 성공!")
+    print(response.json())
+    print("ChatGPT 응답:", response.json()["response"])

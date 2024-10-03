@@ -19,6 +19,8 @@ import os
 import json
 import psutil
 from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
+from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.chrome.options import Options
 
 
 class ChatGPTAutomation:
@@ -30,23 +32,42 @@ class ChatGPTAutomation:
 
         print("기존 Chrome 인스턴스 종료 중...")
         self.close_existing_chrome_instances()
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                print(f"시도 {attempt + 1}/{max_retries}: Chrome 초기화 중...")
+                free_port = self.find_available_port()
+                print(f"포트 {free_port}에서 원격 디버깅으로 Chrome 실행 중...")
+                self.launch_chrome_with_remote_debugging(free_port, self.url, headless=False)
+                print("브라우저가 열릴 때까지 대기 중...")
+                time.sleep(5)  # 브라우저가 완전히 열릴 때까지 대기
 
-        print("원격 디버깅으로 Chrome 실행 중...")
-        free_port = self.find_available_port()
-        print(f"포트 {free_port}에서 원격 디버깅으로 Chrome 실행 중...")
-        self.launch_chrome_with_remote_debugging(free_port, self.url, headless=False)
-        print("브라우저가 열릴 때까지 대기 중...")
-        self.wait_for_human_verification()
-        print("브라우저에 연결 중...")
-        self.driver = self.setup_webdriver(port=free_port)
+                print("브라우저에 연결 중...")
+                self.driver = self.setup_webdriver(port=free_port)
 
-        print("첫 번째 페이지 로드 중...")
-        self.driver.get(self.url)
-        time.sleep(5)  # 페이지 로드를 위해 5초 대기
+                # 명시적 대기 추가
+                WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
-        print("두 번째 페이지 로드 중...")
-        self.driver.get(self.url)
-        time.sleep(5)  # 페이지 로드를 위해 5초 대기
+                print("첫 번째 페이지 로드 중...")
+                self.driver.get(self.url)
+                WebDriverWait(self.driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+
+                print("브라우저에 성공적으로 연결되었습니다.")
+                self.cookie = self.get_cookie(max_retries=3)
+                if self.cookie is None:
+                    print("쿠키를 찾지 못했습니다. 로그인이 필요할 수 있습니다.")
+                    self.close_existing_chrome_instances()
+                    time.sleep(5)
+                    continue
+
+                break  # 성공적으로 초기화되면 루프 종료
+            except WebDriverException as e:
+                print(f"Chrome 초기화 중 오류 발생: {e}")
+                if attempt == max_retries - 1:
+                    raise Exception("Chrome 초기화에 실패했습니다. 최대 재시도 횟수를 초과했습니다.")
+                else:
+                    print("5초 후 재시도합니다...")
+                    time.sleep(5)
 
         if use_temporary_chat:
             new_url = self.url + "&temporary-chat=true"
@@ -121,19 +142,6 @@ class ChatGPTAutomation:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.set_page_load_timeout(30)
         return driver
-
-    # def setup_webdriver(self, port):
-    #     """Initializes a Selenium WebDriver instance, connected to an existing Chrome browser
-    #     with remote debugging enabled on the specified port"""
-
-    #     chrome_options = webdriver.ChromeOptions()
-    #     # chrome_options.binary_location = self.chrome_driver_path
-    #     # chrome_options.add_experimental_option("debuggerAddress", f"127.0.0.1:{port}")
-    #     service = ChromeService(ChromeDriverManager().install())
-    #     driver = webdriver.Chrome(service=service, options=chrome_options)
-
-    #     # driver = webdriver.Chrome(options=chrome_options)
-    #     return driver
 
     def get_cookie(self, max_retries=30, retry_interval=2):
         """
