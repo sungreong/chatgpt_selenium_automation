@@ -10,13 +10,28 @@ chrome_driver_path = r"C:\Users\leesu\Downloads\chromedriver-win64\chromedriver.
 # the sintax r'"..."' is required because the space in "Program Files" in the chrome path
 chrome_path = r'"C:\Program Files\Google\Chrome\Application\chrome.exe"'
 url, use_temporary_chat = get_url_info()
-chatgpt = ChatGPTAutomation(chrome_path, chrome_driver_path, url=url, use_temporary_chat=use_temporary_chat)
+print(url)
+chatgpt = ChatGPTAutomation(chrome_path, chrome_driver_path, url=url, use_temporary_chat=False)
 
 # Define a prompt and send it to chatgpt
 print("Sending prompt to ChatGPT...")
-for prompt in ["안녕하세요!", "오늘 날씨가 어때요?", "무엇을 도와드릴까요?"]:
-    # 파일 업로드
-    chatgpt.send_prompt_to_chatgpt(prompt)
+
+import json
+
+with open("./doc_parsing/page_all_openparse.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+for page_number_str, page_node_data in data["pageBoxList"].items():
+    if len(page_node_data) == 0:
+        continue
+    boxInfos = [
+        dict(id=idx, x=boxinfo["x"], y=boxinfo["y"], bbox=boxinfo["bbox"], text=boxinfo["text"])
+        for idx, boxinfo in enumerate(page_node_data)
+    ]
+    image_path = f"./doc_parsing/image{page_number_str}.png"
+    chatgpt.upload_file(os.path.abspath(image_path))
+
+    chatgpt.send_prompt_to_chatgpt(str(boxInfos))
     # Retrieve the last response from ChatGPT
     response = chatgpt.return_last_response()
     print(response)

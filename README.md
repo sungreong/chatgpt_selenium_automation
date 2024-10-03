@@ -10,6 +10,7 @@ ChatGPT Automation is a Python project that aims to automate interactions with O
 - 모델 선택해서 사용할 수 있게 하기 
 - 임시 채팅방을 통해 기록 남기지 않고 대화하기
 - extension으로 인해서 chrome 여러 tab이 존재할 때 모두 종료하는 로직 추가 (전부 다 꺼지는 오류로 수정)
+- 이미지 파일 넣는 기능 (`upload_file` 함수 추가 (1장씩만 가능하게 함))
 
 ## Prerequisites
 
@@ -27,6 +28,10 @@ ChatGPT Automation is a Python project that aims to automate interactions with O
 - TEMPORARY_CHAT
   - 임시방으로 사용할 경우 필요
   - 될 때도 있고 안될 때도 있어서 불안정함.
+  - `GPTs에 등록된 GROUP은 사용 불가`
+- GROUP_ID
+  - 특정 그룹에서 대화를 진행하고 싶을 때 사용
+  - 그룹 ID는 ChatGPT 웹사이트의 URL에서 확인 가능
 - ROOM_ID
   - 자신의 coversation room 중에 사용하고 싶은 것이 있을 경우 작성
   - 없으면 삭제
@@ -34,6 +39,7 @@ ChatGPT Automation is a Python project that aims to automate interactions with O
   - `MODEL_LIST` 중에 한 개를 선택
 - MODEL_LIST
   - chatgpt web 사이트에서 변경됬을 경우 일부 수정 필요
+- 
 ```
 TEMPORARY_CHAT=false
 # ROOM_ID= (특정 converation 에서 작업하고 싶은 경우)
